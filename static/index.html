@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>مأموریت نجات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>مأموریت نجات</h1>
+    <p>مغز ربات نجات را خودت طراحی کن: قانون بنویس، اولویت بده، اجرایش را تماشا کن و ببین در هر قدم <b>چرا</b> آن تصمیم را گرفت. بدون حتی یک خط کدنویسی.</p>
+    <span class="stage-badge" id="stageBadge">مرحله ۱: ساخت استراتژی</span>
+    <button class="btn small" id="adminOpen" type="button" style="margin-inline-start:auto">پنل ادمین</button>
+  </header>
+
+  <div class="howto">
+    <span><b>۱.</b> قانون بساز: اگر… آنگاه…</span>
+    <span><b>۲.</b> با فلش‌ها اولویت‌ها را جابه‌جا کن</span>
+    <span><b>۳.</b> «اجرای آزمایشی» را بزن و تصمیم‌های ربات را در بازرس تصمیم دنبال کن</span>
+    <span><b>۴.</b> استراتژی‌ات را با عامل یادگیرنده مقایسه کن</span>
+  </div>
+
+  <!-- سازنده استراتژی -->
+  <details class="panel" open>
+    <summary>سازندهٔ استراتژی</summary>
+    <div class="body">
+      <p class="sub">ربات در هر قدم قانون‌ها را از بالا به پایین می‌خواند و <b>اولین قانون برقرار</b> را اجرا می‌کند. پس ترتیب، یعنی اولویت.</p>
+      <div class="preset-row" id="presetRow"></div>
+      <p class="note" id="presetNote" style="margin:-4px 0 12px">استراتژی‌های آماده فقط نقطهٔ شروع‌اند؛ شرط‌ها و اقدام‌های تازه‌ای هم اضافه شده تا ترکیب‌های خیلی بیشتری بسازی و نتیجه‌شان را با هم مقایسه کنی.</p>
+      <div id="rulesList"></div>
+      <div style="border-top:1px dashed var(--line); margin-top:12px; padding-top:12px">
+        <div class="row">
+          <button class="btn" id="addRule" type="button">+ افزودن قانون</button>
+          <button class="btn" id="checkStrategy" type="button">بررسی استراتژی من</button>
+        </div>
+        <div class="warn" id="warnBox" role="status"></div>
+        <p class="note" id="ruleCount"></p>
+        <p class="note">اگر هیچ قانونی برقرار نباشد، ربات از رفتار پیش‌فرض استفاده می‌کند: اگر مصدومی حمل می‌کند به پایگاه برمی‌گردد، وگرنه به جست‌وجوی مصدومان می‌رود.</p>
+        <div class="row" style="margin-top:10px">
+          <input type="text" id="stratName" placeholder="نام استراتژی، مثلاً «شجاعانه»" aria-label="نام استراتژی" style="flex:1; min-width:140px">
+          <button class="btn small" id="saveStrat" type="button">ذخیرهٔ استراتژی</button>
+        </div>
+        <div class="saved-list" id="savedList"></div>
+      </div>
+    </div>
+  </details>
+
+  <!-- صفحه مأموریت + بازرس تصمیم -->
+  <details class="panel" open>
+    <summary>صفحهٔ مأموریت و بازرس تصمیم</summary>
+    <div class="body">
+      <div class="board-layout">
+        <div>
+          <div class="hud">
+            <div class="stat"><div class="v" id="hudScore">۰</div><div class="k">امتیاز نجات</div></div>
+            <div class="stat"><div class="v" id="hudRescued">۰ از ۶</div><div class="k">مصدوم تحویل‌شده</div></div>
+            <div class="stat"><div class="v" id="hudCarry">۰ از ۲</div><div class="k">در حال حمل</div></div>
+            <div class="stat"><div class="v" id="hudTime">۰</div><div class="k">زمان سپری‌شده</div></div>
+            <div class="batt-wrap">
+              <div class="row" style="justify-content:space-between"><span style="font-size:13px; font-weight:700">باتری ربات</span><b id="hudBattTxt">۱۰۰٪</b></div>
+              <div class="batt-bar"><div class="batt-fill" id="hudBatt" style="width:100%"></div></div>
+            </div>
+          </div>
+          <canvas class="board" id="board" width="720" height="720" role="img" aria-label="شبکه ۱۲ در ۱۲ مأموریت نجات"></canvas>
+          <div class="legend">
+            <span><i style="background:var(--teal)"></i>پایگاه</span>
+            <span><i style="background:var(--amber)"></i>ایستگاه شارژ</span>
+            <span><i style="background:#9aa7a1"></i>مانع</span>
+            <span><i style="background:#f6d9c8; border:1px solid var(--red)"></i>زمین خطرناک (۳ برابر مصرف باتری)</span>
+            <span><i style="background:var(--red); border-radius:50%"></i>مصدوم بحرانی</span>
+            <span><i style="background:var(--amber); border-radius:50%"></i>مصدوم فوری</span>
+            <span><i style="background:var(--green); border-radius:50%"></i>مصدوم عادی</span>
+          </div>
+          <div class="controls">
+            <button class="btn primary" id="playBtn" type="button">▶ اجرای آزمایشی</button>
+            <button class="btn" id="stepBtn" type="button">یک قدم</button>
+            <button class="btn" id="resetBtn" type="button">از اول</button>
+            <button class="btn" id="newMapBtn" type="button">نقشهٔ جدید</button>
+            <label style="font-size:13.5px">سرعت
+              <select id="speedSel" aria-label="سرعت اجرا">
+                <option value="700">آرام</option>
+                <option value="380" selected>معمولی</option>
+                <option value="150">سریع</option>
+              </select>
+            </label>
+            <button class="btn accent" id="replayBtn" type="button" disabled>تماشای بازپخش</button>
+          </div>
+          <div class="mission-msg" id="missionMsg" role="status"></div>
+          <div class="replay-bar" id="replayBar">
+            <div class="row" style="margin-bottom:6px">
+              <b>بازپخش مأموریت</b>
+              <span class="note" id="replayInfo"></span>
+              <span style="flex:1"></span>
+              <button class="btn small" id="replayExit" type="button">خروج از بازپخش</button>
+            </div>
+            <div class="row">
+              <button class="icon-btn" id="rpPrev" type="button" aria-label="قدم قبل">→</button>
+              <button class="btn small primary" id="rpPlay" type="button">پخش</button>
+              <button class="icon-btn" id="rpNext" type="button" aria-label="قدم بعد">←</button>
+              <input type="range" id="rpSlider" min="0" max="0" value="0" aria-label="نوار بازپخش">
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3 style="margin:0 0 4px; font-size:17px">بازرس تصمیم</h3>
+          <p class="sub">در هر قدم ببین ربات چه می‌بیند، کدام قانون‌ها برقرارند و چرا این اقدام انتخاب شد.</p>
+          <ul class="obs-list" id="obsList"><li><span>وضعیت ربات</span><b>آمادهٔ شروع</b></li></ul>
+          <div class="check-list" id="checkList"></div>
+          <div class="chosen" id="chosenBox"></div>
+          <h3 style="margin:14px 0 6px; font-size:15px">تاریخچهٔ تصمیم‌ها</h3>
+          <ul class="log" id="decisionLog"></ul>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <!-- تغییر محیط -->
+  <details class="panel" open>
+    <summary>تغییر ناگهانی محیط و تنظیم سناریوها</summary>
+    <div class="body">
+      <div class="shock-zone">
+        <div class="shock-zone-text">
+          <strong>آزمایش تغییر محیط</strong>
+          <span>دنیا همیشه ثابت نمی‌ماند! با این دکمه محیط ناگهان عوض می‌شود؛ قانون‌هایت دست‌نخورده می‌مانند تا خودت ببینی هنوز جواب می‌دهند یا نه.</span>
+        </div>
+        <button class="btn shock-btn" id="shockBtn" type="button">⚡ تغییر ناگهانی محیط</button>
+        <button class="btn" id="restoreEnvBtn" type="button" disabled>↩ بازگشت به محیط عادی</button>
+      </div>
+      <div class="shock-banner" id="shockBanner" hidden role="alert"></div>
+      <h3 style="margin:16px 0 8px; font-size:16px">سناریوهای تغییر محیط</h3>
+      <p class="sub">روی هر سناریو «اعمال» را بزن تا همان تغییر روی محیط همه اعمال شود؛ یا سناریوی تازه بساز.</p>
+      <div id="scenarioList"></div>
+      <div class="row" style="margin-top:8px">
+        <input type="text" id="scnNewName" placeholder="نام سناریوی تازه" style="flex:1; min-width:140px">
+        <button class="btn small primary" id="scnNewBtn" type="button">ساختن سناریوی تازه (با مقدارهای پیش‌فرض)</button>
+      </div>
+      <p class="admin-ok" id="scenarioMsg" role="status"></p>
+    </div>
+  </details>
+
+  <!-- قفل مرحله -->
+  <div class="stage-lock" id="stageLockCard">
+    <h2 style="margin:0 0 4px; font-size:19px; font-weight:800">مرحله ۲: آموزش ربات و مقایسه</h2>
+    <p class="sub">آموزش ربات قفل است — برای آموزش ربات و مقایسه با آن، رمز مرحله بعد را که آموزگار اعلام می‌کند وارد کن.</p>
+    <div class="row">
+      <input type="text" id="stageCodeInput" placeholder="رمز مرحله بعد" aria-label="رمز مرحله بعد" inputmode="numeric" autocomplete="off" style="flex:1; min-width:140px">
+      <button class="btn primary" id="stageUnlockBtn" type="button">باز کردن مرحله بعد</button>
+    </div>
+    <p class="stage-err" id="stageCodeErr" role="alert"></p>
+  </div>
+
+  <!-- آزمایش بزرگ -->
+  <details class="panel hidden" id="comparePanel">
+    <summary>آزمایش بزرگ: استراتژی تو در برابر ربات یادگیرنده</summary>
+    <div class="body">
+      <p class="sub">ربات یادگیرنده هیچ قانونی از تو ندارد؛ با روش <b>یادگیری تقویتی</b> و آزمون‌وخطا روی صدها نقشه یاد می‌گیرد چه کار کند. هر دو را روی <b id="evalMapsLbl">۳۰ نقشهٔ یکسان</b> آزمایش می‌کنیم تا مقایسه عادلانه باشد.</p>
+      <div class="compare-grid">
+        <div class="agent-card">
+          <h3>استراتژی تو</h3>
+          <p>همان قانون‌هایی که در سازندهٔ استراتژی ساخته‌ای؛ دقیق، قابل پیش‌بینی و کاملاً وابسته به اولویت‌هایی که انتخاب کرده‌ای.</p>
+        </div>
+        <div class="agent-card">
+          <h3>عامل یادگیرنده</h3>
+          <div class="prog"><i id="trainProg"></i></div>
+          <p class="note" id="trainInfo">هنوز آموزشی انجام نشده است.</p>
+          <canvas id="trainChart" width="600" height="180" style="width:100%; height:90px; display:block; margin-top:8px"></canvas>
+          <div class="row" style="margin-top:8px">
+            <button class="btn primary" id="trainBtn" type="button">آموزش عامل یادگیرنده</button>
+            <button class="btn" id="resetTrainBtn" type="button">شروع دوبارهٔ آموزش از صفر</button>
+          </div>
+        </div>
+      </div>
+      <div class="model-zone" id="modelZone">
+        <h3>استراتژی مدل — چیزی که عامل یاد گرفته است</h3>
+        <p style="margin:0 0 10px; color:var(--muted); font-size:13.5px">بعد از آموزش، اینجا می‌بینی عامل چی یاد گرفته — مثل قانون‌های خودت.</p>
+        <div id="modelStrategy"></div>
+      </div>
+      <div class="row" style="margin-top:16px">
+        <button class="btn accent" id="evalBtn" type="button" disabled>اجرای مقایسه روی ۳۰ نقشهٔ یکسان</button>
+        <label style="font-size:14px">تغییر محیط آزمایش:
+          <select id="capSel" aria-label="ظرفیت حمل در محیط آزمایش">
+            <option value="2" selected>ظرفیت حمل ۲ نفر (محیط اصلی)</option>
+            <option value="1">ظرفیت حمل ۱ نفر (محیط تغییریافته)</option>
+          </select>
+        </label>
+        <button class="btn" id="finetuneBtn" type="button" disabled>یادگیری دوباره در محیط جدید</button>
+      </div>
+      <p class="note" id="evalNote">اول عامل یادگیرنده را آموزش بده، بعد مقایسه را اجرا کن.</p>
+      <div id="evalOut"></div>
+      <div class="dual-boards hidden" id="dualBoards">
+        <div>
+          <h4>استراتژی تو — مأموریت نمونه</h4>
+          <canvas class="board" id="boardHuman" width="720" height="720"></canvas>
+          <div class="mini-hud" id="hudHuman"></div>
+        </div>
+        <div>
+          <h4>عامل یادگیرنده — همان نقشه</h4>
+          <canvas class="board" id="boardRL" width="720" height="720"></canvas>
+          <div class="mini-hud" id="hudRL"></div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn small" id="dualPlayBtn" type="button">▶ پخش همزمان دو تخته</button>
+        <input type="range" id="dualSlider" min="0" max="0" value="0" style="flex:1; accent-color:var(--teal)" aria-label="نوار پخش همزمان">
+        <span class="note" id="dualInfo"></span>
+      </div>
+    </div>
+  </details>
+
+  <footer>مأموریت نجات — یک بازی آموزشی برای فهم تصمیم‌گیری ربات‌ها: قانون، اولویت و یادگیری از تجربه.</footer>
+</div>
+
+<!-- پنل ادمین -->
+<div class="admin-overlay" id="adminOverlay" role="dialog" aria-modal="true" aria-label="پنل ادمین">
+  <div class="admin-box">
+    <div id="adminGate">
+      <h2>پنل ادمین</h2>
+      <p class="sub">برای باز کردن پنل ادمین، رمز ادمین را وارد کن.</p>
+      <div class="row">
+        <input type="text" id="adminCodeInput" placeholder="رمز ادمین" aria-label="رمز ادمین" inputmode="numeric" autocomplete="off" style="flex:1; min-width:140px">
+        <button class="btn primary" id="adminUnlockBtn" type="button">باز کردن پنل ادمین</button>
+      </div>
+      <p class="admin-err" id="adminCodeErr" role="alert"></p>
+      <div class="row" style="margin-top:12px"><button class="btn" id="adminGateClose" type="button">بستن</button></div>
+    </div>
+    <div id="adminPanel" hidden>
+      <h2>پنل ادمین — پارامترها</h2>
+      <p class="sub">این‌ها تنظیمات سراسری‌اند و برای همهٔ کاربران روی سرور ذخیره می‌شوند. با زدن «اعمال و ذخیره»، مأموریت جاری با پارامترهای تازه از اول شروع می‌شود.</p>
+      <div class="admin-sec">نمایش در سازندهٔ استراتژی</div>
+      <label class="toggle-row" for="showPresetsToggle">
+        <input type="checkbox" id="showPresetsToggle">
+        <span class="toggle-txt"><b>نمایش استراتژی‌های آماده</b><small>وقتی خاموش است، کارت‌های استراتژی‌های آماده در سازندهٔ استراتژی کاملاً مخفی‌اند و دانش‌آموز آن‌ها را نمی‌بیند.</small></span>
+      </label>
+      <div id="adminFields"></div>
+      <div class="admin-sec">تنظیم‌های ذخیره‌شدهٔ من</div>
+      <p class="sub">عددهای بالا را هرطور می‌خواهی عوض کن، یک اسم بده و «ذخیرهٔ تنظیم فعلی» را بزن تا همان ترکیب پارامترها ذخیره شود.</p>
+      <div class="row" style="margin-bottom:10px">
+        <input type="text" id="adminPresetName" placeholder="نام تنظیم، مثلاً «تنظیم ۱»" aria-label="نام تنظیم" style="flex:1; min-width:160px">
+        <button class="btn small primary" id="adminPresetSave" type="button">ذخیرهٔ تنظیم فعلی</button>
+      </div>
+      <div id="adminPresetList"></div>
+      <p class="note" style="margin:4px 0 0">«بازنشانی تنظیمات» فقط پارامترهای فعلی را به مقدارهای پیش‌فرض بازی برمی‌گرداند و تنظیم‌های ذخیره‌شده‌ات را پاک نمی‌کند.</p>
+      <p class="admin-err" id="adminPanelErr"></p>
+      <p class="admin-ok" id="adminOk"></p>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" id="adminApply" type="button">اعمال و ذخیره</button>
+        <button class="btn" id="adminDefaults" type="button">بازنشانی تنظیمات</button>
+        <button class="btn" id="adminRelockBtn" type="button">بازگشت به مرحله ۱ (قفل کردن دوباره)</button>
+        <button class="btn" id="adminClose" type="button">بستن پنل</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
